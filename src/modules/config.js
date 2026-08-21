@@ -1,8 +1,8 @@
 export const TIER_MODULES = {
-  Starter: ['dashboard', 'assessment', 'evp', 'strategy'],
-  Growth: ['dashboard', 'assessment', 'evp', 'strategy', 'content', 'advocacy'],
+  Starter: ['dashboard', 'assessment', 'audit', 'evp', 'strategy'],
+  Growth: ['dashboard', 'assessment', 'audit', 'evp', 'strategy', 'content', 'advocacy'],
   '360': [
-    'dashboard', 'assessment', 'evp', 'strategy', 'content', 'advocacy',
+    'dashboard', 'assessment', 'audit', 'evp', 'strategy', 'content', 'advocacy',
     'recruitment', 'assets', 'videos', 'internal', 'pipeline', 'ai',
   ],
 };
@@ -16,6 +16,16 @@ export const TAB_DEFS = {
       { key: 'engagementFeedback', label: 'Employee Engagement & Candidate Feedback' },
       { key: 'competitorBenchmark', label: 'Competitor Benchmark' },
       { key: 'gaps', label: 'Gaps & Opportunities Identified' },
+    ],
+  },
+  audit: {
+    label: 'Audit Log', type: 'list', itemFields: [
+      { key: 'date', label: 'Date', type: 'date' },
+      { key: 'auditor', label: 'Conducted By' },
+      { key: 'category', label: 'Category', type: 'select', options: ['Market Perception', 'Digital Channels', 'Employee Engagement', 'Competitor Benchmark', 'Policy Review', 'Other'] },
+      { key: 'finding', label: 'Finding / Notes' },
+      { key: 'score', label: 'Score (0-10)', type: 'number' },
+      { key: 'evidenceLink', label: 'Evidence Link (Drive/Doc URL)' },
     ],
   },
   evp: {
