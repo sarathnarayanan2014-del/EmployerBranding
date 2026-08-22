@@ -39,7 +39,7 @@ button, input, select, textarea { font-family: inherit; }
 .nav-link.active{ color:var(--signal); background:rgba(255,159,28,0.08); }
 
 /* MAIN */
-.main{ display:flex; flex-direction:column; min-height:100vh; }
+.main{ display:flex; flex-direction:column; min-height:100vh; min-width:0; overflow-x:hidden; }
 .topbar{ display:flex; justify-content:space-between; align-items:center; padding:18px 28px; border-bottom:1px solid var(--line); gap:16px; }
 .topbar h1{ font-family:var(--display); font-weight:600; font-size:18px; }
 .topbar .cindustry{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:2px;}
@@ -80,7 +80,8 @@ button, input, select, textarea { font-family: inherit; }
 .tag{ font-family:var(--mono); font-size:10px; padding:2px 8px; border-radius:10px; background:var(--panel); border:1px solid var(--line); color:var(--muted); }
 .item-card .del-btn{ background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; line-height:1; padding:2px 6px;}
 .item-card .del-btn:hover{ color:var(--bad); }
-.add-item-form{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; align-items:end; margin-top:12px; padding-top:14px; border-top:1px dashed var(--line); }
+.add-item-form{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:12px; padding-top:14px; border-top:1px dashed var(--line); }
+@media (min-width:640px){ .add-item-form{ grid-template-columns:1fr 1fr; align-items:end; } }
 
 /* CHECKLIST */
 .checklist-item{ display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); }
@@ -101,7 +102,9 @@ button, input, select, textarea { font-family: inherit; }
 .gauge-panel{ display:flex; flex-direction:column; align-items:center; padding-top:6px;}
 .score-value{ font-family:var(--mono); font-size:42px; font-weight:600; color:var(--warn); line-height:1;}
 .score-value span{ font-size:18px; color:var(--muted); }
-.metric-strip{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-top:10px;}
+.metric-strip{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:10px;}
+@media (min-width:520px){ .metric-strip{ grid-template-columns:1fr 1fr; } }
+@media (min-width:900px){ .metric-strip{ grid-template-columns:1fr 1fr 1fr; } }
 .mini-field{ display:flex; flex-direction:column; gap:5px; }
 .mini-field label{ font-family:var(--mono); font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;}
 .mini-field input{ background:var(--panel2); border:1px solid var(--line); color:var(--text); border-radius:6px; padding:7px 9px; font-family:var(--mono); font-size:12.5px;}
