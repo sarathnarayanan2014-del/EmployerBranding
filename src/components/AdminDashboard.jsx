@@ -149,14 +149,14 @@ export default function AdminDashboard() {
 
 function ManageLogins({ clients }) {
   const [logins, setLogins] = useState([]);
-  const [form, setForm] = useState({ email: '', password: '', displayName: '', clientId: '' });
+  const [form, setForm] = useState({ email: '', password: '', displayName: '', clientId: '', accessLevel: 'edit' });
   const [status, setStatus] = useState('');
   const [rowState, setRowState] = useState({}); // per-login: { newPassword, busy, msg }
 
   async function loadLogins() {
     const { data } = await supabase
       .from('profiles')
-      .select('id, display_name, client_id, role, clients(name)')
+      .select('id, display_name, client_id, role, access_level, clients(name)')
       .eq('role', 'company');
     setLogins(data || []);
   }
@@ -177,12 +177,23 @@ function ManageLogins({ clients }) {
       return;
     }
     setStatus('Login created ✓');
-    setForm({ email: '', password: '', displayName: '', clientId: '' });
+    setForm({ email: '', password: '', displayName: '', clientId: '', accessLevel: 'edit' });
     loadLogins();
   }
 
   function setRow(id, patch) {
     setRowState((s) => ({ ...s, [id]: { ...s[id], ...patch } }));
+  }
+
+  async function setAccessLevel(userId, newLevel) {
+    setRow(userId, { busy: true });
+    const { error } = await supabase.from('profiles').update({ access_level: newLevel }).eq('id', userId);
+    if (error) {
+      setRow(userId, { busy: false, msg: 'Error: ' + error.message });
+      return;
+    }
+    setRow(userId, { busy: false, msg: 'Access level updated ✓' });
+    loadLogins();
   }
 
   async function resetPassword(userId) {
@@ -255,6 +266,13 @@ function ManageLogins({ clients }) {
             <label>Temporary Password</label>
             <input type="text" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
           </div>
+          <div className="field">
+            <label>Access Level</label>
+            <select value={form.accessLevel} onChange={(e) => setForm((f) => ({ ...f, accessLevel: e.target.value }))}>
+              <option value="edit">Can Edit</option>
+              <option value="view">View Only</option>
+            </select>
+          </div>
           <button className="btn btn-primary" onClick={createLogin}>Create</button>
         </div>
         <div className="login-error" style={{ color: status.startsWith('Error') ? 'var(--bad)' : 'var(--good)' }}>{status}</div>
@@ -285,6 +303,17 @@ function ManageLogins({ clients }) {
                     {clients.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label>Access Level</label>
+                  <select
+                    value={l.access_level || 'edit'}
+                    onChange={(e) => setAccessLevel(l.id, e.target.value)}
+                    disabled={rs.busy}
+                  >
+                    <option value="edit">Can Edit</option>
+                    <option value="view">View Only</option>
                   </select>
                 </div>
                 <div className="field">
