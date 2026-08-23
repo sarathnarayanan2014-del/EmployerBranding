@@ -151,6 +151,7 @@ function ManageLogins({ clients }) {
   const [logins, setLogins] = useState([]);
   const [form, setForm] = useState({ email: '', password: '', displayName: '', clientId: '' });
   const [status, setStatus] = useState('');
+  const [rowState, setRowState] = useState({}); // per-login: { newPassword, busy, msg }
 
   async function loadLogins() {
     const { data } = await supabase
@@ -168,7 +169,9 @@ function ManageLogins({ clients }) {
       return;
     }
     setStatus('Creating…');
-    const { data, error } = await supabase.functions.invoke('create-company-user', { body: form });
+    const { data, error } = await supabase.functions.invoke('create-company-user', {
+      body: { action: 'create', ...form },
+    });
     if (error || data?.error) {
       setStatus('Error: ' + (data?.error || error.message));
       return;
@@ -176,6 +179,50 @@ function ManageLogins({ clients }) {
     setStatus('Login created ✓');
     setForm({ email: '', password: '', displayName: '', clientId: '' });
     loadLogins();
+  }
+
+  function setRow(id, patch) {
+    setRowState((s) => ({ ...s, [id]: { ...s[id], ...patch } }));
+  }
+
+  async function resetPassword(userId) {
+    const newPassword = rowState[userId]?.newPassword;
+    if (!newPassword || newPassword.length < 6) {
+      setRow(userId, { msg: 'Enter a password (6+ characters).' });
+      return;
+    }
+    setRow(userId, { busy: true, msg: '' });
+    const { data, error } = await supabase.functions.invoke('create-company-user', {
+      body: { action: 'reset_password', userId, newPassword },
+    });
+    if (error || data?.error) {
+      setRow(userId, { busy: false, msg: 'Error: ' + (data?.error || error.message) });
+      return;
+    }
+    setRow(userId, { busy: false, msg: 'Password updated ✓', newPassword: '' });
+  }
+
+  async function reassignClient(userId, newClientId) {
+    setRow(userId, { busy: true });
+    const { error } = await supabase.from('profiles').update({ client_id: newClientId }).eq('id', userId);
+    if (error) {
+      setRow(userId, { busy: false, msg: 'Error: ' + error.message });
+      return;
+    }
+    setRow(userId, { busy: false, msg: 'Access updated ✓' });
+    loadLogins();
+  }
+
+  async function setAccess(userId, action) {
+    setRow(userId, { busy: true, msg: '' });
+    const { data, error } = await supabase.functions.invoke('create-company-user', {
+      body: { action, userId },
+    });
+    if (error || data?.error) {
+      setRow(userId, { busy: false, msg: 'Error: ' + (data?.error || error.message) });
+      return;
+    }
+    setRow(userId, { busy: false, msg: action === 'deactivate' ? 'Access revoked ✓' : 'Access restored ✓' });
   }
 
   return (
@@ -216,16 +263,51 @@ function ManageLogins({ clients }) {
       <div className="panel">
         <h3>Existing Company Logins</h3>
         {logins.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 12.5 }}>No company logins yet.</div>}
-        {logins.map((l) => (
-          <div className="item-card" key={l.id}>
-            <div className="item-main">
-              <div className="item-title">{l.display_name || '(no name)'}</div>
-              <div className="item-tags">
-                <span className="tag">Client: {l.clients?.name || '—'}</span>
+        {logins.map((l) => {
+          const rs = rowState[l.id] || {};
+          return (
+            <div className="item-card" key={l.id} style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+              <div className="item-main" style={{ marginBottom: 10 }}>
+                <div className="item-title">{l.display_name || '(no name)'}</div>
+                <div className="item-tags">
+                  <span className="tag">Client: {l.clients?.name || '—'}</span>
+                </div>
               </div>
+
+              <div className="add-item-form" style={{ borderTop: 'none', paddingTop: 0, marginTop: 0 }}>
+                <div className="field">
+                  <label>Reassign Access To</label>
+                  <select
+                    value={l.client_id || ''}
+                    onChange={(e) => reassignClient(l.id, e.target.value)}
+                    disabled={rs.busy}
+                  >
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label>New Password</label>
+                  <input
+                    type="text"
+                    value={rs.newPassword || ''}
+                    onChange={(e) => setRow(l.id, { newPassword: e.target.value })}
+                    placeholder="min 6 characters"
+                  />
+                </div>
+                <div className="field" style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+                  <button className="btn btn-ghost" disabled={rs.busy} onClick={() => resetPassword(l.id)}>Reset Password</button>
+                  <button className="btn btn-danger" disabled={rs.busy} onClick={() => setAccess(l.id, 'deactivate')}>Deactivate</button>
+                  <button className="btn btn-ghost" disabled={rs.busy} onClick={() => setAccess(l.id, 'reactivate')}>Reactivate</button>
+                </div>
+              </div>
+              {rs.msg && (
+                <div className="login-error" style={{ color: rs.msg.startsWith('Error') ? 'var(--bad)' : 'var(--good)' }}>{rs.msg}</div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
