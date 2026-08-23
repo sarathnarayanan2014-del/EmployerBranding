@@ -45,7 +45,7 @@ export default function CompanyDashboard() {
             </div>
           </div>
           <div className="topbar-actions">
-            <span className="session-badge">COMPANY LOGIN</span>
+            <span className="session-badge">COMPANY LOGIN{profile.access_level === 'view' ? ' · VIEW ONLY' : ''}</span>
             <button className="logout-btn" onClick={signOut}>Log out</button>
           </div>
         </div>
@@ -57,7 +57,17 @@ export default function CompanyDashboard() {
           ))}
         </div>
         <div className="content">
-          <ModuleView clientId={client.id} moduleId={tab} />
+          {profile.access_level === 'view' && (
+            <div className="panel" style={{ borderColor: 'var(--warn)', marginBottom: 12 }}>
+              <strong style={{ color: 'var(--warn)' }}>View Only Access</strong>
+              <div style={{ color: 'var(--muted)', fontSize: 12.5, marginTop: 4 }}>
+                You can view this dashboard but can't make changes. Contact your HR Mitra account manager to request edit access.
+              </div>
+            </div>
+          )}
+          <div style={profile.access_level === 'view' ? { pointerEvents: 'none', opacity: 0.6 } : undefined}>
+            <ModuleView clientId={client.id} moduleId={tab} />
+          </div>
         </div>
       </div>
     </div>
