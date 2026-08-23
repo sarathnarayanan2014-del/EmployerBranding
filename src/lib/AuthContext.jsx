@@ -5,13 +5,13 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
-  const [profile, setProfile] = useState(null); // { role, client_id, display_name }
+  const [profile, setProfile] = useState(null); // { role, client_id, display_name, access_level }
   const [loading, setLoading] = useState(true);
 
   async function loadProfile(userId) {
     const { data, error } = await supabase
       .from('profiles')
-      .select('role, client_id, display_name')
+      .select('role, client_id, display_name, access_level')
       .eq('id', userId)
       .single();
     if (error) {
